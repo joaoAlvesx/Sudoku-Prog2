@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 void carregue(char quadro[9][9]);
 FILE* carregue_continue_jogo (char quadro[9][9], char *nome_arquivo);
@@ -37,35 +38,57 @@ int main(){
 	opcao = leia_opcao();
 	if (opcao == 1){
 	carregue(quadro);
+	printf("saiu");
 
-	if (fb == NULL) {
+	/*if (fb == NULL) {
 		fb = crie_arquivo_binario(quadro);
 	}
-
+*/
 	}
 }
 
 
-void carregue(char quadro[9][9]) {
-	int opcao = 0;
-
+void carregue(char quadro[9][9]){
+	FILE *fb;
+	char caminho[20] = {"../exemplos_teste/"};
+	int valor = 0;
+	int nread;
+	char nomeArquivo[20];
+	char txt[5] = {".txt"};
 	menu_arquivo();
-	printf("aqui");
-	opcao = leia_opcao();
-	printf("chegou no if");
+	printf("Opcao: ");
+	scanf("%d", &valor);
+	getchar();
 	// TODO Função incompleta
 
-	if (opcao == 1)
+	if (valor == 1)	
 	{
-		printf("Qual o nome do arquivo txt");
+		printf("Qual o nome do arquivo txt: ");
+		fgets(nomeArquivo,20,stdin);
+		nomeArquivo[strcspn(nomeArquivo, "\n")] = '\0';
+		strcat(nomeArquivo, txt);
+		strcat(caminho, nomeArquivo);
+		printf("%s", caminho);
 		
-	}else if(opcao == 2)
+		fb = fopen(caminho,"r");
+		if (fb == NULL){
+			printf("nao abriu") ;
+		}else{
+		while (!feof(fb)) {
+			nread = fscanf(fb, "%d");
+			printf("%d",nread);
+		}
+		
+		
+		}
+
+	}else if(valor == 2)
 	{
 		// continuar jogo
 			printf("Qual o nome do arquivo binario");
-	}/*else{
-		return 0;
-	}*/
+	}else if(valor ==9){
+		printf("9");
+	}
 
 		
 
@@ -93,6 +116,7 @@ void carregue_novo_jogo(char quadro[9][9], char *nome_arquivo) {
 FILE* crie_arquivo_binario(char quadro[9][9]) {
 	// TODO
 	printf("carregue novo jogo");
+	
 }
 
 FILE* carregue_continue_jogo (char quadro[9][9], char *nome_arquivo) {
