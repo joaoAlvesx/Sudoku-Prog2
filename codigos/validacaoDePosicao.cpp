@@ -50,7 +50,7 @@ int main(){
 	int valido = eh_valido(quadro,x,y,valor);
 	printf("eh valido em tudo: %d",valido);	
 	
-}
+}	
 int eh_valido_na_coluna(const char quadro[9][9], int y, int valor) {
 	int y_funcao,x;
 	
