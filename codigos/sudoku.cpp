@@ -187,8 +187,9 @@ FILE* crie_arquivo_binario(char quadro[9][9]) {
 	gen_random(nomeArquivo,3);
 	nomeArquivo[strcspn(nomeArquivo, "\n")] = '\0';
 	strcat(nomeArquivo, bin);
+	printf("%s",nomeArquivo);
 	FILE * fb;
-	fb = fopen(nomeArquivo,"wb");
+	fb = fopen(nomeArquivo,"wb+");
 	fwrite(n,sizeof(int),1,fb);
 
 	for (int x = 0;x < 9;x++){
