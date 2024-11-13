@@ -137,7 +137,6 @@ FILE* carregue_continue_jogo (char quadro[9][9], char *nome_arquivo) {
 			aux++;
 		}
 		}
-		imprima(quadro);
 		return fb;
 }
 
@@ -168,7 +167,6 @@ void carregue_novo_jogo(char quadro[9][9], char *nome_arquivo) {
 			}
 			aux++;
 		}
-		imprima(quadro);
 		fclose(fb);
 		//criar arquivo binario e salvar o quadro no arquivo
 }
@@ -380,7 +378,7 @@ void jogue() {
 
 	while (opcao != 9) {
 		// imprima na tela o quadro atual
-		printf("While");
+		printf("\n\n\n\n");
 		imprima(quadro);
 
 		// apresente um menu com as opcoes
@@ -422,7 +420,6 @@ void jogue() {
 			resolve_um_passo(quadro);
 			salve_jogada_bin(fb, quadro);
 			puts("Um passo resolvido!");
-			imprima(quadro);
 			break;
 		}
 		// resolva o sudoku completo

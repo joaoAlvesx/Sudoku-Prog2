@@ -26,7 +26,7 @@ int eh_valido_na_linha(const char quadro[9][9], int x, int valor);
 int existe_posicao_vazia(const char quadro[9][9]);
 void imprima(const char quadro[9][9]);
 void jogue();
-void resolve_completo(FILE*, char quadro[9][9]);
+int resolve_completo(FILE*, char quadro[9][9]);
 void resolve_um_passo(char quadro[9][9]);
 void salve_jogada_bin(FILE* fb, char quadro[9][9]);
 
@@ -83,6 +83,7 @@ FILE* carregue(char quadro[9][9]) {
 			strcat(nomeArquivo, txt);
 			carregue_novo_jogo(quadro,nomeArquivo);
 			fb = crie_arquivo_binario(quadro);
+			return fb;
 			break;
 		}
 		// continuar jogo
@@ -96,13 +97,16 @@ FILE* carregue(char quadro[9][9]) {
 			printf("%s",binario);
 
 			fb = carregue_continue_jogo(quadro,binario);
+			return fb;
 			break;
 		}
 		// retornar ao menu anterior
 		case 9:{
+			return fb;
 			break;
 		}
 		default:{
+			return fb;
 			break;
 		}
 		return fb;
@@ -180,17 +184,16 @@ void carregue_novo_jogo(char quadro[9][9], char *nome_arquivo) {
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 FILE* crie_arquivo_binario(char quadro[9][9]) {
-	int n[] ={0};
-	char nomeArquivo[8];
+	int n = 0;
+	char nomeArquivoBin[8];
 	char bin[5] = {".bin"};
 	int valor = 0;
-	gen_random(nomeArquivo,3);
-	nomeArquivo[strcspn(nomeArquivo, "\n")] = '\0';
-	strcat(nomeArquivo, bin);
-	printf("%s",nomeArquivo);
+	gen_random(nomeArquivoBin,3);
+	nomeArquivoBin[strcspn(nomeArquivoBin, "\n")] = '\0';
+	strcat(nomeArquivoBin, bin);
 	FILE * fb;
-	fb = fopen(nomeArquivo,"wb+");
-	fwrite(n,sizeof(int),1,fb);
+	fb = fopen(nomeArquivoBin,"wb+");
+	fwrite(&n,sizeof(int),1,fb);
 
 	for (int x = 0;x < 9;x++){
 		for (int y=0;y<9;y++){
@@ -199,7 +202,6 @@ FILE* crie_arquivo_binario(char quadro[9][9]) {
 		}
 	}
 	
-	printf("%s",nomeArquivo);
 	return fb;
 }
 
@@ -381,7 +383,7 @@ void jogue() {
 
 	while (opcao != 9) {
 		// imprima na tela o quadro atual
-		printf("While");
+		printf("\n\n\n");
 		imprima(quadro);
 
 		// apresente um menu com as opcoes
@@ -402,6 +404,9 @@ void jogue() {
 
 		// preencha quadro com um valor
 		case 2: {
+			if (fb == NULL) {
+				fb = crie_arquivo_binario(quadro);
+			}
 			int x, y, valor;
 
 			printf("Entre com a posicao e o valor (linha, coluna, valor): ");
@@ -420,18 +425,30 @@ void jogue() {
 
 		// resolva 1 passo
 		case 3:{
+			if (fb == NULL) {
+				fb = crie_arquivo_binario(quadro);
+			}
 			resolve_um_passo(quadro);
 			salve_jogada_bin(fb, quadro);
 			puts("Um passo resolvido!");
-			imprima(quadro);
 			break;
 		}
 		// resolva o sudoku completo
 		case 4:{
-			resolve_completo(fb, quadro);
+			if (fb == NULL) {
+				fb = crie_arquivo_binario(quadro);
+			}
+			int teste = resolve_completo(fb, quadro);
+			if (teste == 1)
+				printf("DEU CERTO");
+			else
+				printf("Deu merda");
 			break;
 		}
 		case 9:{
+			if (fb == NULL) {
+				fb = crie_arquivo_binario(quadro);
+			}
 			puts("Programa finalizado ..");
 			fclose(fb);
 			break;
@@ -450,11 +467,42 @@ void jogue() {
  * Resolve o sudoku
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-void resolve_completo(FILE *fb, char quadro[9][9]) {
-	while(existe_posicao_vazia(quadro)) {
-		resolve_um_passo(quadro);
-		salve_jogada_bin(fb, quadro);
+int resolve_completo(FILE *fb, char quadro[9][9]) {
+	int linha = 0, coluna = 0, vazio = 0;
+	FILE *bin = fb;
+
+	// Localiza a primeira célula vazia e sai assim que encontra uma
+	for (int i = 0; i <= 8 && !vazio; i++) {
+		for (int j = 0; j <= 8 && !vazio; j++) {
+			if (quadro[i][j] == 0) {
+				linha = i;
+				coluna = j;
+				vazio = 1;
+			}
+		}
 	}
+
+	// Se não há células vazias, o Sudoku está resolvido
+	if (vazio == 0)
+		return 1;  // Indica que o quadro foi resolvido com sucesso
+
+	// Tenta números de 1 a 9 (não 0 a 8)
+	for (int num = 1; num <= 9; num++) {
+		if (eh_valido(quadro, linha, coluna, num)) {
+			quadro[linha][coluna] = num;
+			
+			// Chama a função recursiva e salva a jogada se encontrar uma solução
+			if (resolve_completo(bin, quadro) == 1) {
+				salve_jogada_bin(bin, quadro);
+				return 1;
+			}
+			
+			// Se a tentativa falhou, volta a célula para 0
+			quadro[linha][coluna] = 0;
+		}
+	}
+	return 0;  // Indica que não encontrou solução com esta configuração
+
 }
 
 /* -----------------------------------------------------------------------------
@@ -464,15 +512,29 @@ void resolve_completo(FILE *fb, char quadro[9][9]) {
  */
 void resolve_um_passo(char quadro[9][9]) {
 	if (existe_posicao_vazia(quadro)){
-		for(int i = 0; i < 9; i++) {
-			for(int j = 0; j < 9; j++) {
+		for(int i = 0; i <= 8; i++) {
+			for(int j = 0; j <= 8; j++) {
 				if (quadro[i][j] == 0)
 					{
-						for (int valor =0;valor<=9;valor++){
-							if(eh_valido(quadro,i,j,valor))
-								quadro[i][j]=valor;
+						int feito = FALSO;
+						int valor = 1;
+						while (feito == FALSO){
+						
+						if (eh_valido(quadro,i,j,valor))
+						{
+							quadro[i][j] = valor;
+							feito = VERDADEIRO;
+							return;
+						}else{
+							valor++;
+							if (valor >= 9){
+								feito = VERDADEIRO;
+								printf("Nenhum valor eh possivel");
 								return;
+							}
 						}
+						}return;
+						
 					}
 			}
 	}
@@ -493,6 +555,7 @@ void salve_jogada_bin (FILE *fb, char quadro[9][9]) {
 	else {
 		fread(&jogadas,sizeof(int),1,fb);
 		jogadas++;
+		printf("quantidade de jogadas eh %d ", jogadas);
 		fseek(fb, 0, SEEK_SET);
 	    fwrite(&jogadas, sizeof(int), 1, fb);
 		
