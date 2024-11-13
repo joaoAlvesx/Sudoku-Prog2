@@ -120,7 +120,7 @@ FILE* carregue(char quadro[9][9]) {
 FILE* carregue_continue_jogo (char quadro[9][9], char *nome_arquivo) {
 		FILE *fb;
 		int nread,aux = 0,y=0;
-		fb = fopen(nome_arquivo,"rb");
+		fb = fopen(nome_arquivo,"rb+");
 		if (fb == NULL){
 			printf("Erro");
 		}else{
@@ -194,14 +194,15 @@ FILE* crie_arquivo_binario(char quadro[9][9]) {
 	FILE * fb;
 	fb = fopen(nomeArquivoBin,"wb+");
 	fwrite(&n,sizeof(int),1,fb);
-
+	fseek(fb,0,SEEK_END);
 	for (int x = 0;x < 9;x++){
 		for (int y=0;y<9;y++){
 			valor = quadro[x][y];
 			fwrite(&valor,sizeof(int),1,fb);
 		}
 	}
-	
+	fclose(fb);
+	fb = fopen(nomeArquivoBin,"rb+");
 	return fb;
 }
 
@@ -378,7 +379,7 @@ void jogue() {
 			{0, 0, 0, 0, 0, 0, 0, 0, 0}
 	};
 	FILE *fb = NULL;
-
+	int jogadas = 0;
 	opcao = 0;
 
 	while (opcao != 9) {
@@ -442,7 +443,8 @@ void jogue() {
 			if (teste == 1)
 				printf("DEU CERTO");
 			else
-				printf("Deu merda");
+				printf("Deu Errado");
+			salve_jogada_bin(fb,quadro);
 			break;
 		}
 		case 9:{
@@ -471,7 +473,7 @@ int resolve_completo(FILE *fb, char quadro[9][9]) {
 	int linha = 0, coluna = 0, vazio = 0;
 	FILE *bin = fb;
 
-	// Localiza a primeira célula vazia e sai assim que encontra uma
+	
 	for (int i = 0; i <= 8 && !vazio; i++) {
 		for (int j = 0; j <= 8 && !vazio; j++) {
 			if (quadro[i][j] == 0) {
@@ -482,27 +484,21 @@ int resolve_completo(FILE *fb, char quadro[9][9]) {
 		}
 	}
 
-	// Se não há células vazias, o Sudoku está resolvido
 	if (vazio == 0)
-		return 1;  // Indica que o quadro foi resolvido com sucesso
+		return 1;  
 
-	// Tenta números de 1 a 9 (não 0 a 8)
 	for (int num = 1; num <= 9; num++) {
 		if (eh_valido(quadro, linha, coluna, num)) {
 			quadro[linha][coluna] = num;
 			
-			// Chama a função recursiva e salva a jogada se encontrar uma solução
 			if (resolve_completo(bin, quadro) == 1) {
-				salve_jogada_bin(bin, quadro);
 				return 1;
 			}
 			
-			// Se a tentativa falhou, volta a célula para 0
 			quadro[linha][coluna] = 0;
 		}
 	}
-	return 0;  // Indica que não encontrou solução com esta configuração
-
+	return 0;  
 }
 
 /* -----------------------------------------------------------------------------
@@ -539,6 +535,7 @@ void resolve_um_passo(char quadro[9][9]) {
 			}
 	}
 	}
+
 }
 
 /* -----------------------------------------------------------------------------
@@ -553,6 +550,7 @@ void salve_jogada_bin (FILE *fb, char quadro[9][9]) {
         return;
     }
 	else {
+		fseek(fb, 0, SEEK_SET);
 		fread(&jogadas,sizeof(int),1,fb);
 		jogadas++;
 		printf("quantidade de jogadas eh %d ", jogadas);
