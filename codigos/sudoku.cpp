@@ -94,7 +94,6 @@ FILE* carregue(char quadro[9][9]) {
 			fgets(binario,4,stdin);
 			binario[strcspn(binario, "\n")] = '\0';
 			strcat(binario, bin);
-			printf("%s",binario);
 
 			fb = carregue_continue_jogo(quadro,binario);
 			return fb;
@@ -129,7 +128,6 @@ FILE* carregue_continue_jogo (char quadro[9][9], char *nome_arquivo) {
 		for (int i = 0; i <= 81; i++) {
 			fread(&nread,sizeof(int), 1, fb);	
 				
-			printf("%d",nread);	
 			if (aux == 9){
 			y++;
 				aux = 0;
@@ -157,7 +155,7 @@ void carregue_novo_jogo(char quadro[9][9], char *nome_arquivo) {
 		FILE *fb;
 		fb = fopen(nome_arquivo,"r");
 		if (fb == NULL){
-			printf("nao abriu") ;
+			printf("Erro") ;
 		}else{
 		for (int i = 0; i < 81; i++) {
 			fscanf(fb, "%d", &nread);
@@ -441,9 +439,9 @@ void jogue() {
 			}
 			int teste = resolve_completo(fb, quadro);
 			if (teste == 1)
-				printf("DEU CERTO");
+				printf("Jogo Resolvido");
 			else
-				printf("Deu Errado");
+				printf("Jogo Sem solução");
 			salve_jogada_bin(fb,quadro);
 			break;
 		}
